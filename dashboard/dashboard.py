@@ -16,7 +16,7 @@ our side is required to perform the computations in the background.
 from bokeh.embed import file_html
 from bokeh.io import curdoc
 from bokeh.io.util import default_filename
-from bokeh.layouts import layout
+from bokeh.layouts import column, layout
 from bokeh.models import ColumnDataSource, CustomJS, Slider
 from bokeh.plotting import figure, save
 from bokeh.resources import CDN
@@ -86,7 +86,7 @@ def main():
     # Arrange widgets
     dashboard = layout(
         [trajectory_plot, time_plot],
-        sliders
+        column(sliders)
     )
 
     # Initialize solver (extending bokeh.core.templates.FILE)
