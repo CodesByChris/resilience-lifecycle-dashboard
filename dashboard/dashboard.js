@@ -29,16 +29,16 @@ class Solver {
         let {robustness: curr_rob, adaptivity: curr_ada, time: curr_time} = this.initial_values;
 
         // Solve over time
-        let solution = {robustness: Array(), adaptivity: Array(), time: Array()};
-        while (curr_time <= this.params.end) {
+        let solution = {robustness: [], adaptivity: [], time: []};
+        while (curr_time <= this.params.t_max) {
             // Store current values
-            solution.robustness.append(curr_rob)
-            solution.adaptivity.append(curr_ada)
-            solution.time.append(curr_time)
+            solution.robustness.push(curr_rob)
+            solution.adaptivity.push(curr_ada)
+            solution.time.push(curr_time)
 
             // Compute next values (simultaneous update!)
-            delta_rob = this.computeDrDt(curr_rob, curr_ada) * self.params.time_step
-            delta_ada = this.computeDaDt(curr_rob, curr_ada) * self.params.time_step
+            const delta_rob = this.computeDrDt(curr_rob, curr_ada) * this.params.time_step
+            const delta_ada = this.computeDaDt(curr_rob, curr_ada) * this.params.time_step
             curr_rob += delta_rob
             curr_ada += delta_ada
             curr_time += this.params.time_step

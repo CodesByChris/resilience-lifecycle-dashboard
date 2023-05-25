@@ -8,15 +8,18 @@ Plotted graphics are:
 1. Adaptivity vs. robustness (Figure 4)
 2. Adaptivity and Robustness vs. time (Figure 5)
 
-The dashboard performs all computations for slider changes in the user's
-browser. This has the advantage that no server from our side is required to
-perform the computations in the background.
+The dashboard is standalone, which means that it performs all computations for
+slider changes in the user's browser. This has the advantage that no server from
+our side is required to perform the computations in the background.
 """
 
+from bokeh.embed import file_html
+from bokeh.io import curdoc
+from bokeh.io.util import default_filename
 from bokeh.layouts import layout
 from bokeh.models import ColumnDataSource, CustomJS, Slider
 from bokeh.plotting import figure, save
-from bokeh.resources import Resources
+from bokeh.resources import CDN
 
 # Initial values and constants
 T_MAX = 100 # (0, T_MAX) is time interval in which to solve and visualize the differential equations
@@ -35,34 +38,38 @@ SLIDER_PARAMETERS = [{"start": 0, "end": 1, "value": 0.29, "step": 0.1, "title":
                      {"start": 0, "end": 10, "value": 0.34, "step": 0.1, "title": "beta_r"},]
 
 
-def make_slider(param_dict: dict) -> Slider:
+def make_slider(param_dict: dict, data_source: ColumnDataSource) -> Slider:
     """Constructs a slider and registers callback that triggers ODE recomputation upon change.
 
     Args:
         param_dict: A dict specifying the named arguments of the Slider
             constructor. The arguments are "start", "end", "value", "step", and
             "title". Typically, you will pass an entry from SLIDER_PARAMETERS.
+        data_source: The ColumnDataSource holding the "robustness",
+            "adaptivity", and "time" values displayed in the plots. This
+            data_source is updated with the solver's solution.
 
     Returns:
         The constructed slider.
     """
-    js_handler = CustomJS(args={"data_source": "data_source"}, code="""
-        // Trigger equation solver
+    slider = Slider(**param_dict)
+
+    # Trigger solver for updated parameter
+    slider.js_on_change("value", CustomJS(args={"data_source": data_source}, code="""
         solver.params[cb_obj.title] = cb_obj.value;
         data_source.data = solver.solution;
-
-        // Trigger plot update
-        // TODO: DO I HAVE TO TRIGGER PLOT UPDATE USING SOMETHING ALONG THE LINES OF source.change.emit();
-    """)
-    slider = Slider(**param_dict)
-    slider.js_on_change("value", js_handler)
+    """))
     return slider
 
 
 def main():
     """Create dashboard layout and save HTML page."""
     # Initialize data with placeholder value (will be computed from within JavaScript)
-    data_source = ColumnDataSource(data={"robustness": [0], "adaptivity": [0], "time": [0]})
+    data_source = ColumnDataSource(data={"robustness": [], "adaptivity": [], "time": []})
+
+    curdoc().js_on_event('document_ready', CustomJS(args={"data_source": data_source}, code="""
+        data_source.data = solver.solution;
+    """))
 
     # Initialize left figure widget
     trajectory_plot = figure(x_range=VALUE_RANGE, y_range=VALUE_RANGE, width=500, height=500)
@@ -74,7 +81,7 @@ def main():
     time_plot.line("adaptivity", "time", source=data_source, line_width=2, color="blue")
 
     # Initialize input widgets (sliders, toggles, etc.)
-    sliders = map(make_slider, SLIDER_PARAMETERS)
+    sliders = [make_slider(params, data_source) for params in SLIDER_PARAMETERS]
 
     # Arrange widgets
     dashboard = layout(
@@ -82,21 +89,28 @@ def main():
         sliders
     )
 
-    # Load solver
-    js_resources = Resources("inline", components=["dashboard.js"])
-
-    dashboard.js_on_event("document_ready",
-                          CustomJS(args={"params": INITIAL_PARAMS,
-                                         "initial_values": INITIAL_VALUES,
-                                         "data_source": data_source},
-                                   code="""
-        var solver = new Solver(params, initial_values);
-        data_source.data = solver.solution  // Compute ODE for initial params
-    """))
+    # Initialize solver (extending bokeh.core.templates.FILE)
+    load_solver_template = """
+        {% block postamble %}
+        <script src="dashboard.js"></script>
+        <script>
+            // Initialize solver object shared between all widgets
+            var solver = new Solver({{ params }}, {{ initial_values }});
+        </script>
+        {% endblock %}
+    """
 
     # Save HTML
-    save(dashboard, resources=js_resources)
-    # TODO: Likely, I have to pass the library code to import the JavaScript ODE solver, see: https://stackoverflow.com/a/55043631
+    html = file_html(dashboard,
+                     resources=CDN,
+                     template=load_solver_template,
+                     template_variables={"params": INITIAL_PARAMS,
+                                         "initial_values": INITIAL_VALUES,})
+    with open(default_filename("html"), "w") as file:
+        file.write(html)
+        # Note: bokeh.plotting.save does not support template_variables, and
+        #     thus it cannot be used to initialize the solver. This is why the
+        #     detour via file_html is used.
 
 
 if __name__ == "__main__":
