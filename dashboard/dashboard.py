@@ -18,24 +18,24 @@ from bokeh.io import curdoc
 from bokeh.io.util import default_filename
 from bokeh.layouts import column, layout
 from bokeh.models import ColumnDataSource, CustomJS, Slider
-from bokeh.plotting import figure, save
+from bokeh.plotting import figure
 from bokeh.resources import CDN
 
 # Initial values and constants
-T_MAX = 100 # (0, T_MAX) is time interval in which to solve and visualize the differential equations
+T_MAX = 200 # (0, T_MAX) is time interval in which to solve and visualize the differential equations
 VALUE_RANGE = (0, 1) # axis range for robustness and adaptivity
 INITIAL_VALUES = {"robustness": 0.15, "adaptivity": 0.25, "time": 0}
 INITIAL_PARAMS = {"t_max": T_MAX, "time_step": 0.1,
                   "q": 0.29, "alpha_r": 0.29, "gamma_r0": 1.27, "gamma_r2": 1.41,
                   "beta_a": 0.68, "alpha_a": 0.07, "gamma_a": 0.25, "beta_r": 0.34}
-SLIDER_PARAMETERS = [{"start": 0, "end": 1, "value": 0.29, "step": 0.1, "title": "q"},
-                     {"start": 0, "end": 10, "value": 0.11, "step": 0.1, "title": "alpha_r"},
-                     {"start": 0, "end": 10, "value": 1.27, "step": 0.1, "title": "gamma_r0"},
-                     {"start": 0, "end": 10, "value": 1.41, "step": 0.1, "title": "gamma_r2"},
-                     {"start": 0, "end": 10, "value": 0.68, "step": 0.1, "title": "beta_a"},
-                     {"start": 0, "end": 10, "value": 0.07, "step": 0.1, "title": "alpha_a"},
-                     {"start": 0, "end": 10, "value": 0.25, "step": 0.1, "title": "gamma_a"},
-                     {"start": 0, "end": 10, "value": 0.34, "step": 0.1, "title": "beta_r"},]
+SLIDER_PARAMETERS = [{"start": 0, "end": 1, "value": 0.29, "step": 0.01, "title": "q"},
+                     {"start": 0, "end": 1.5, "value": 0.11, "step": 0.01, "title": "alpha_r"},
+                     {"start": 0, "end": 1.5, "value": 1.27, "step": 0.01, "title": "gamma_r0"},
+                     {"start": 0, "end": 1.5, "value": 1.41, "step": 0.01, "title": "gamma_r2"},
+                     {"start": 0, "end": 1.5, "value": 0.68, "step": 0.01, "title": "beta_a"},
+                     {"start": 0, "end": 1.5, "value": 0.07, "step": 0.01, "title": "alpha_a"},
+                     {"start": 0, "end": 1.5, "value": 0.25, "step": 0.01, "title": "gamma_a"},
+                     {"start": 0, "end": 1.5, "value": 0.34, "step": 0.01, "title": "beta_r"},]
 
 
 def make_slider(param_dict: dict, data_source: ColumnDataSource) -> Slider:
@@ -54,7 +54,7 @@ def make_slider(param_dict: dict, data_source: ColumnDataSource) -> Slider:
     """
     slider = Slider(**param_dict)
 
-    # Trigger solver for updated parameter
+    # Trigger solver for parameter updates
     slider.js_on_change("value", CustomJS(args={"data_source": data_source}, code="""
         solver.params[cb_obj.title] = cb_obj.value;
         data_source.data = solver.solution;
@@ -72,13 +72,23 @@ def main():
     """))
 
     # Initialize left figure widget
-    trajectory_plot = figure(x_range=VALUE_RANGE, y_range=VALUE_RANGE, width=500, height=500)
-    trajectory_plot.line("robustness", "adaptivity", source=data_source, line_width=3)
+    trajectory_plot = figure(width=500, height=500, title="Figure 4")
+    trajectory_plot.line("robustness", "adaptivity", source=data_source, line_width=3, color="black")
+    trajectory_plot.xaxis.axis_label = "Robustness"
+    trajectory_plot.xaxis.axis_label_text_font_size = "15pt"
+    trajectory_plot.xaxis.major_label_text_color = "red"
+    trajectory_plot.yaxis.axis_label = "Adaptivity"
+    trajectory_plot.yaxis.major_label_text_color = "blue"
+    trajectory_plot.yaxis.axis_label_text_font_size = "15pt"
 
     # Initialize right figure widget
-    time_plot = figure(x_range=(0, T_MAX), y_range=VALUE_RANGE, width=500, height=500)
-    time_plot.line("robustness", "time", source=data_source, line_width=2, color="red")
-    time_plot.line("adaptivity", "time", source=data_source, line_width=2, color="blue")
+    time_plot = figure(width=500, height=500, title="Figure 5")
+    time_plot.line("time", "robustness", source=data_source, line_width=2, color="red")
+    time_plot.line("time", "adaptivity", source=data_source, line_width=2, color="blue")
+    time_plot.xaxis.axis_label = "Time"
+    time_plot.xaxis.axis_label_text_font_size = "15pt"
+    time_plot.yaxis.axis_label = "Value"
+    time_plot.yaxis.axis_label_text_font_size = "15pt"
 
     # Initialize input widgets (sliders, toggles, etc.)
     sliders = [make_slider(params, data_source) for params in SLIDER_PARAMETERS]
