@@ -13,6 +13,7 @@ slider changes in the user's browser. This has the advantage that no server from
 our side is required to perform the computations in the background.
 """
 
+from bokeh.colors import Color
 from bokeh.embed import file_html
 from bokeh.io import curdoc
 from bokeh.io.util import default_filename
@@ -40,6 +41,99 @@ SLIDER_PARAMETERS = [{"start": 0, "end": 1, "value": 0.29, "step": 0.01, "title"
 COLOR_ADAPTIVITY = "#FBB13C"  # Yellow
 COLOR_ROBUSTNESS = "#2E5EAA"  # Blue
 COLOR_SG = "#A8322D"  # Red
+
+
+def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
+                         line_width: int, width: int, height: int, title: str,
+                         font_size_axes: str):
+    """Constructs a plot to visualize the 2D-trajectory of the ODE.
+
+    The plot is an xy-plot whose x-axis is robustness and y-axis is adaptivity,
+    which are read from (and automatically updated to) data_source.
+
+    The plot's purpose is to show cycles in the dynamics. Whether or not cycles
+    exist depends on the values of the ODE's parameters chosen with the sliders,
+    which in turn update the parameters of the ODE.
+
+    Args:
+        data_source: The data source containing the x and y values for the plot.
+            It has columns "robustness" and "adaptivity". Its values are the
+            solution of the ODE for a specific set of parameters.
+        color: The color of the plotted line.
+        line_width: The width of the plotted line.
+        width: The width of the plot in pixels.
+        height: The height of the plot in pixels.
+        title: The plot title.
+        font_size_axes: The font size of the axis labels.
+
+    Returns:
+        The constructed plot.
+    """
+
+    # Plot trajectory
+    trajectory_plot = figure(width=width, height=height, title=title, tooltips=[("Rob.", "$x"), ("Ada.", "$y")])
+    trajectory_plot.line("robustness", "adaptivity", source=data_source, line_width=line_width, color=color)
+
+    # Set visuals
+    trajectory_plot.xaxis.axis_label = "Robustness"
+    trajectory_plot.yaxis.axis_label = "Adaptivity"
+    trajectory_plot.xaxis.axis_label_text_font_size = font_size_axes
+    trajectory_plot.yaxis.axis_label_text_font_size = font_size_axes
+    #trajectory_plot.xaxis.major_label_text_color = COLOR_ROBUSTNESS
+    #trajectory_plot.yaxis.major_label_text_color = COLOR_ADAPTIVITY
+
+    return trajectory_plot
+
+
+def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color | str,
+                         color_adaptivity: Color | str, fill_alpha: int,
+                         line_width: int, width: int, height: int, title: str,
+                         font_size_axes: str):
+    """Constructs a plot to visualize robustness and adaptivity over time.
+
+    The plotted values are read from (and automatically updated to) data_source.
+
+    Args:
+        data_source: The data source containing the values for the plot. It has
+            columns "robustness", "adaptivity", and "time. Its values are the
+            solution of the ODE for a specific set of parameters.
+        color_robustness: The color of the plotted robustness line.
+        color_adaptivity: The color of the plotted robustness line.
+        fill_alpha: The transparency of the shaded areas below the lines.
+        line_width: The width of the plotted lines.
+        width: The width of the plot in pixels.
+        height: The height of the plot in pixels.
+        title: The plot title.
+        font_size_axes: The font size of the axis labels.
+
+    Returns:
+        The constructed plot.
+    """
+    time_plot = figure(width=width, height=height, title=title)
+
+    # Plot robustness
+    robustness_line = time_plot.line("time", "robustness", source=data_source, line_width=line_width, color=color_robustness)
+    time_plot.varea("time", 0, "robustness", source=data_source, fill_color=color_robustness, fill_alpha=fill_alpha)
+
+    # Plot adaptivity
+    adaptivity_line = time_plot.line("time", "adaptivity", source=data_source, line_width=line_width, color=color_adaptivity)
+    time_plot.varea("time", 0, "adaptivity", source=data_source, fill_color=color_adaptivity, fill_alpha=fill_alpha)
+
+    # Set tooltips
+    #     Hint for showing tooltips only on some glyphs: https://stackoverflow.com/a/37558475
+    robustness_hover = HoverTool(tooltips=[("Time", "$x"), ("Rob.", "$y")])
+    robustness_hover.renderers = [robustness_line]
+    adaptivity_hover = HoverTool(tooltips=[("Time", "$x"), ("Ada.", "$y")])
+    adaptivity_hover.renderers = [adaptivity_line]
+    time_plot.add_tools(robustness_hover, adaptivity_hover)
+
+    # Set visuals
+    time_plot.xaxis.axis_label = "Time"
+    time_plot.yaxis.axis_label = "Value"
+    time_plot.xaxis.axis_label_text_font_size = font_size_axes
+    time_plot.yaxis.axis_label_text_font_size = font_size_axes
+
+    return time_plot
 
 
 def make_slider(param_dict: dict, data_source: ColumnDataSource) -> Slider:
@@ -75,35 +169,14 @@ def main():
         data_source.data = solver.solution;
     """))
 
-    # Initialize left figure widget
-    trajectory_plot = figure(width=500, height=500, title="Plane", tooltips=[("Rob.", "$x"), ("Ada.", "$y")])
-    trajectory_plot.line("robustness", "adaptivity", source=data_source, line_width=5, color="black")
-    trajectory_plot.xaxis.axis_label = "Robustness"
-    trajectory_plot.xaxis.axis_label_text_font_size = "15pt"
-    trajectory_plot.xaxis.major_label_text_color = COLOR_ROBUSTNESS
-    trajectory_plot.yaxis.axis_label = "Adaptivity"
-    trajectory_plot.yaxis.major_label_text_color = COLOR_ADAPTIVITY
-    trajectory_plot.yaxis.axis_label_text_font_size = "15pt"
-
-    # Initialize right figure widget
-    # Hint for tooltips showing only on some glyphs from: https://stackoverflow.com/a/37558475
-    time_plot = figure(width=500, height=500, title="Dynamics")
-
-    robustness_line = time_plot.line("time", "robustness", source=data_source, line_width=5, color=COLOR_ROBUSTNESS)
-    robustness_hover = HoverTool(tooltips=[("Time", "$x"), ("Rob.", "$y")])
-    robustness_hover.renderers = [robustness_line]
-    time_plot.varea("time", 0, "robustness", source=data_source, fill_color=COLOR_ROBUSTNESS, fill_alpha=0.15)
-
-    adaptivity_line = time_plot.line("time", "adaptivity", source=data_source, line_width=5, color=COLOR_ADAPTIVITY)
-    adaptivity_hover = HoverTool(tooltips=[("Time", "$x"), ("Ada.", "$y")])
-    adaptivity_hover.renderers = [adaptivity_line]
-    time_plot.varea("time", 0, "adaptivity", source=data_source, fill_color=COLOR_ADAPTIVITY, fill_alpha=0.15)
-
-    time_plot.add_tools(robustness_hover, adaptivity_hover)
-    time_plot.xaxis.axis_label = "Time"
-    time_plot.xaxis.axis_label_text_font_size = "15pt"
-    time_plot.yaxis.axis_label = "Value"
-    time_plot.yaxis.axis_label_text_font_size = "15pt"
+    # Initialize figure widgets
+    trajectory_plot = make_trajectory_plot(data_source, "black", line_width=5,
+                                           width=500, height=500, title="Plane",
+                                           font_size_axes="15pt")
+    time_plot = make_timeseries_plot(data_source, color_robustness=COLOR_ROBUSTNESS,
+                                     color_adaptivity=COLOR_ADAPTIVITY, fill_alpha=0.15,
+                                     line_width=5, width=500, height=500, title="Dynamics",
+                                     font_size_axes="15pt")
 
     # Initialize input widgets (sliders, toggles, etc.)
     sliders = [make_slider(params, data_source) for params in SLIDER_PARAMETERS]
