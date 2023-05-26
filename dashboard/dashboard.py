@@ -17,13 +17,13 @@ from bokeh.embed import file_html
 from bokeh.io import curdoc
 from bokeh.io.util import default_filename
 from bokeh.layouts import column, layout
-from bokeh.models import ColumnDataSource, CustomJS, Slider
+from bokeh.models import ColumnDataSource, CustomJS, HoverTool, Slider
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 
 # Initial values and constants
-T_MAX = 200 # (0, T_MAX) is time interval in which to solve and visualize the differential equations
-VALUE_RANGE = (0, 1) # axis range for robustness and adaptivity
+T_MAX = 100  # (0, T_MAX) is time interval in which to solve and visualize the differential equations
+VALUE_RANGE = (0, 1)  # axis range for robustness and adaptivity
 INITIAL_VALUES = {"robustness": 0.15, "adaptivity": 0.25, "time": 0}
 INITIAL_PARAMS = {"t_max": T_MAX, "time_step": 0.1,
                   "q": 0.29, "alpha_r": 0.29, "gamma_r0": 1.27, "gamma_r2": 1.41,
@@ -36,6 +36,10 @@ SLIDER_PARAMETERS = [{"start": 0, "end": 1, "value": 0.29, "step": 0.01, "title"
                      {"start": 0, "end": 1.5, "value": 0.07, "step": 0.01, "title": "alpha_a"},
                      {"start": 0, "end": 1.5, "value": 0.25, "step": 0.01, "title": "gamma_a"},
                      {"start": 0, "end": 1.5, "value": 0.34, "step": 0.01, "title": "beta_r"},]
+
+COLOR_ADAPTIVITY = "#FBB13C"  # Yellow
+COLOR_ROBUSTNESS = "#2E5EAA"  # Blue
+COLOR_SG = "#A8322D"  # Red
 
 
 def make_slider(param_dict: dict, data_source: ColumnDataSource) -> Slider:
@@ -72,19 +76,30 @@ def main():
     """))
 
     # Initialize left figure widget
-    trajectory_plot = figure(width=500, height=500, title="Figure 4")
-    trajectory_plot.line("robustness", "adaptivity", source=data_source, line_width=3, color="black")
+    trajectory_plot = figure(width=500, height=500, title="Plane", tooltips=[("Rob.", "$x"), ("Ada.", "$y")])
+    trajectory_plot.line("robustness", "adaptivity", source=data_source, line_width=5, color="black")
     trajectory_plot.xaxis.axis_label = "Robustness"
     trajectory_plot.xaxis.axis_label_text_font_size = "15pt"
-    trajectory_plot.xaxis.major_label_text_color = "red"
+    trajectory_plot.xaxis.major_label_text_color = COLOR_ROBUSTNESS
     trajectory_plot.yaxis.axis_label = "Adaptivity"
-    trajectory_plot.yaxis.major_label_text_color = "blue"
+    trajectory_plot.yaxis.major_label_text_color = COLOR_ADAPTIVITY
     trajectory_plot.yaxis.axis_label_text_font_size = "15pt"
 
     # Initialize right figure widget
-    time_plot = figure(width=500, height=500, title="Figure 5")
-    time_plot.line("time", "robustness", source=data_source, line_width=2, color="red")
-    time_plot.line("time", "adaptivity", source=data_source, line_width=2, color="blue")
+    # Hint for tooltips showing only on some glyphs from: https://stackoverflow.com/a/37558475
+    time_plot = figure(width=500, height=500, title="Dynamics")
+
+    robustness_line = time_plot.line("time", "robustness", source=data_source, line_width=5, color=COLOR_ROBUSTNESS)
+    robustness_hover = HoverTool(tooltips=[("Time", "$x"), ("Rob.", "$y")])
+    robustness_hover.renderers = [robustness_line]
+    time_plot.varea("time", 0, "robustness", source=data_source, fill_color=COLOR_ROBUSTNESS, fill_alpha=0.15)
+
+    adaptivity_line = time_plot.line("time", "adaptivity", source=data_source, line_width=5, color=COLOR_ADAPTIVITY)
+    adaptivity_hover = HoverTool(tooltips=[("Time", "$x"), ("Ada.", "$y")])
+    adaptivity_hover.renderers = [adaptivity_line]
+    time_plot.varea("time", 0, "adaptivity", source=data_source, fill_color=COLOR_ADAPTIVITY, fill_alpha=0.15)
+
+    time_plot.add_tools(robustness_hover, adaptivity_hover)
     time_plot.xaxis.axis_label = "Time"
     time_plot.xaxis.axis_label_text_font_size = "15pt"
     time_plot.yaxis.axis_label = "Value"
