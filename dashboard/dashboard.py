@@ -21,11 +21,11 @@ from bokeh.layouts import column, layout
 from bokeh.models import ColumnDataSource, CustomJS, HoverTool, Slider
 from bokeh.plotting import figure
 from bokeh.resources import CDN
+from math import log
 
 # Initial values and constants
 T_MAX = 100  # (0, T_MAX) is time interval in which to solve and visualize the differential equations
-VALUE_RANGE = (0, 1)  # axis range for robustness and adaptivity
-INITIAL_VALUES = {"robustness": 0.15, "adaptivity": 0.25, "time": 0}
+INITIAL_VALUES = {"robustness": log(0.5), "adaptivity": log(0.5), "time": 0}
 INITIAL_PARAMS = {"t_max": T_MAX, "time_step": 0.1,
                   "q": 0.29, "alpha_r": 0.29, "gamma_r0": 1.27, "gamma_r2": 1.41,
                   "beta_a": 0.68, "alpha_a": 0.07, "gamma_a": 0.25, "beta_r": 0.34}

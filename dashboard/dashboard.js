@@ -31,9 +31,9 @@ class Solver {
         // Solve over time
         let solution = {robustness: [], adaptivity: [], time: []};
         while (curr_time <= this.params.t_max) {
-            // Store current values
-            solution.robustness.push(curr_rob)
-            solution.adaptivity.push(curr_ada)
+            // Store current values (exponentially transformed for non-negativity)
+            solution.robustness.push(Math.exp(curr_rob))
+            solution.adaptivity.push(Math.exp(curr_ada))
             solution.time.push(curr_time)
 
             // Compute next values (simultaneous update!)
