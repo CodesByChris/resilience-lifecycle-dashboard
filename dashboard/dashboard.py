@@ -71,18 +71,18 @@ def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
     """
 
     # Plot trajectory
-    trajectory_plot = figure(width=width, height=height, title=title, tooltips=[("Rob.", "$x"), ("Ada.", "$y")])
-    trajectory_plot.line("robustness", "adaptivity", source=data_source, line_width=line_width, color=color)
+    plot = figure(width=width, height=height, title=title, tooltips=[("Rob.", "$x"), ("Ada.", "$y")])
+    plot.line("robustness", "adaptivity", source=data_source, line_width=line_width, color=color)
 
     # Set visuals
-    trajectory_plot.xaxis.axis_label = "Robustness"
-    trajectory_plot.yaxis.axis_label = "Adaptivity"
-    trajectory_plot.xaxis.axis_label_text_font_size = font_size_axes
-    trajectory_plot.yaxis.axis_label_text_font_size = font_size_axes
-    #trajectory_plot.xaxis.major_label_text_color = COLOR_ROBUSTNESS
-    #trajectory_plot.yaxis.major_label_text_color = COLOR_ADAPTIVITY
+    plot.xaxis.axis_label = "Robustness"
+    plot.yaxis.axis_label = "Adaptivity"
+    plot.xaxis.axis_label_text_font_size = font_size_axes
+    plot.yaxis.axis_label_text_font_size = font_size_axes
+    #plot.xaxis.major_label_text_color = COLOR_ROBUSTNESS
+    #plot.yaxis.major_label_text_color = COLOR_ADAPTIVITY
 
-    return trajectory_plot
+    return plot
 
 
 def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color | str,
@@ -109,15 +109,15 @@ def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color 
     Returns:
         The constructed plot.
     """
-    time_plot = figure(width=width, height=height, title=title)
+    plot = figure(width=width, height=height, title=title)
 
     # Plot robustness
-    robustness_line = time_plot.line("time", "robustness", source=data_source, line_width=line_width, color=color_robustness)
-    time_plot.varea("time", 0, "robustness", source=data_source, fill_color=color_robustness, fill_alpha=fill_alpha)
+    robustness_line = plot.line("time", "robustness", source=data_source, line_width=line_width, color=color_robustness)
+    plot.varea("time", 0, "robustness", source=data_source, fill_color=color_robustness, fill_alpha=fill_alpha)
 
     # Plot adaptivity
-    adaptivity_line = time_plot.line("time", "adaptivity", source=data_source, line_width=line_width, color=color_adaptivity)
-    time_plot.varea("time", 0, "adaptivity", source=data_source, fill_color=color_adaptivity, fill_alpha=fill_alpha)
+    adaptivity_line = plot.line("time", "adaptivity", source=data_source, line_width=line_width, color=color_adaptivity)
+    plot.varea("time", 0, "adaptivity", source=data_source, fill_color=color_adaptivity, fill_alpha=fill_alpha)
 
     # Set tooltips
     #     Hint for showing tooltips only on some glyphs: https://stackoverflow.com/a/37558475
@@ -125,24 +125,24 @@ def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color 
     robustness_hover.renderers = [robustness_line]
     adaptivity_hover = HoverTool(tooltips=[("Time", "$x"), ("Ada.", "$y")])
     adaptivity_hover.renderers = [adaptivity_line]
-    time_plot.add_tools(robustness_hover, adaptivity_hover)
+    plot.add_tools(robustness_hover, adaptivity_hover)
 
     # Set visuals
-    time_plot.xaxis.axis_label = "Time"
-    time_plot.yaxis.axis_label = "Value"
-    time_plot.xaxis.axis_label_text_font_size = font_size_axes
-    time_plot.yaxis.axis_label_text_font_size = font_size_axes
+    plot.xaxis.axis_label = "Time"
+    plot.yaxis.axis_label = "Value"
+    plot.xaxis.axis_label_text_font_size = font_size_axes
+    plot.yaxis.axis_label_text_font_size = font_size_axes
 
-    return time_plot
+    return plot
 
 
 def make_slider(param_dict: dict, data_source: ColumnDataSource) -> Slider:
-    """Constructs a slider and registers callback that triggers ODE recomputation upon change.
+    """Constructs a slider to change the ODE's parameters.
 
     Args:
         param_dict: A dict specifying the named arguments of the Slider
             constructor. The arguments are "start", "end", "value", "step", and
-            "title". Typically, you will pass an entry from SLIDER_PARAMETERS.
+            "title". Typically, you will pass an entry from PARAMS_DEFAULT.
         data_source: The ColumnDataSource holding the "robustness",
             "adaptivity", and "time" values displayed in the plots. This
             data_source is updated with the solver's solution.
@@ -162,8 +162,9 @@ def make_slider(param_dict: dict, data_source: ColumnDataSource) -> Slider:
 
 def main():
     """Create dashboard layout and save HTML page."""
+
     # Initialize data with placeholder value (will be computed from within JavaScript)
-    data_source = ColumnDataSource(data={"robustness": [], "adaptivity": [], "time": []})
+    data_source = ColumnDataSource(data={"robustness": [0], "adaptivity": [0], "time": [0]})
 
     curdoc().js_on_event('document_ready', CustomJS(args={"data_source": data_source}, code="""
         data_source.data = solver.solution;
@@ -207,8 +208,8 @@ def main():
     with open(default_filename("html"), "w") as file:
         file.write(html)
         # Note: bokeh.plotting.save does not support template_variables, and
-        #     thus it cannot be used to initialize the solver. This is why the
-        #     detour via file_html is used.
+        #     thus it cannot initialize the global solver object. This is why
+        #     the detour via file_html is used.
 
 
 if __name__ == "__main__":

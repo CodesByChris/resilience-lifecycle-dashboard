@@ -37,14 +37,12 @@ class Solver {
             solution.time.push(curr_time)
 
             // Compute next values (simultaneous update!)
-            const delta_rob = this.computeDrDt(curr_rob, curr_ada) * this.params.time_step
-            const delta_ada = this.computeDaDt(curr_rob, curr_ada) * this.params.time_step
+            const delta_rob = this.computeDrDt(curr_rob, curr_ada) * this.params.step_size
+            const delta_ada = this.computeDaDt(curr_rob, curr_ada) * this.params.step_size
             curr_rob += delta_rob
             curr_ada += delta_ada
-            curr_time += this.params.time_step
+            curr_time += this.params.step_size
         }
-
-        // TODO: implement link function exp(...)
 
         return solution
     }
@@ -66,7 +64,7 @@ class Solver {
          * @returns The computed value for dr/dt.
          */
         const {alpha_r, q, gamma_r0, gamma_r2, beta_a} = this.params;
-        return alpha_r*(1 - q) + gamma_r0*rob - gamma_r2*rob*rob*rob - beta_a * ada
+        return alpha_r*(1 - q) + gamma_r0*rob - gamma_r2*Math.pow(rob, 3) - beta_a * ada
     }
 
 
