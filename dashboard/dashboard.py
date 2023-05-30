@@ -17,8 +17,8 @@ from bokeh.colors import Color
 from bokeh.embed import file_html
 from bokeh.io import curdoc
 from bokeh.io.util import default_filename
-from bokeh.layouts import column, layout
-from bokeh.models import ColumnDataSource, CustomJS, HoverTool, Slider
+from bokeh.layouts import column, layout, row
+from bokeh.models import Button, ColumnDataSource, CustomJS, HoverTool, Slider
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from math import log
@@ -26,17 +26,13 @@ from math import log
 # Initial values and constants
 T_MAX = 100  # (0, T_MAX) is time interval in which to solve and visualize the differential equations
 INITIAL_VALUES = {"robustness": log(0.5), "adaptivity": log(0.5), "time": 0}
-INITIAL_PARAMS = {"t_max": T_MAX, "time_step": 0.1,
-                  "q": 0.29, "alpha_r": 0.29, "gamma_r0": 1.27, "gamma_r2": 1.41,
-                  "beta_a": 0.68, "alpha_a": 0.07, "gamma_a": 0.25, "beta_r": 0.34}
-SLIDER_PARAMETERS = [{"start": 0, "end": 1, "value": 0.29, "step": 0.01, "title": "q"},
-                     {"start": 0, "end": 1.5, "value": 0.11, "step": 0.01, "title": "alpha_r"},
-                     {"start": 0, "end": 1.5, "value": 1.27, "step": 0.01, "title": "gamma_r0"},
-                     {"start": 0, "end": 1.5, "value": 1.41, "step": 0.01, "title": "gamma_r2"},
-                     {"start": 0, "end": 1.5, "value": 0.68, "step": 0.01, "title": "beta_a"},
-                     {"start": 0, "end": 1.5, "value": 0.07, "step": 0.01, "title": "alpha_a"},
-                     {"start": 0, "end": 1.5, "value": 0.25, "step": 0.01, "title": "gamma_a"},
-                     {"start": 0, "end": 1.5, "value": 0.34, "step": 0.01, "title": "beta_r"},]
+PRESETS = {"Scenario I": {"t_max": T_MAX, "step_size": 0.1,
+                          "q": 0.29, "alpha_r": 0.12, "gamma_r0": 1.27, "gamma_r2": 2.07,
+                          "beta_a": 0.68, "alpha_a": 0.07, "gamma_a": 0.24, "beta_r": 0.34},
+           "Scenario II": {"t_max": T_MAX, "step_size": 0.1,
+                           "q": 0.29, "alpha_r": 0.02, "gamma_r0": 0.7, "gamma_r2": 1.41,
+                           "beta_a": 0.33, "alpha_a": 0.01, "gamma_a": 0.01, "beta_r": 0.34}}
+INITIAL_PARAMS = PRESETS["Scenario I"].copy()
 
 COLOR_ADAPTIVITY = "#FBB13C"  # Yellow
 COLOR_ROBUSTNESS = "#2E5EAA"  # Blue
@@ -160,6 +156,44 @@ def make_slider(param_dict: dict, data_source: ColumnDataSource) -> Slider:
     return slider
 
 
+def make_preset_button(presets: dict[str, float],
+                       data_source: ColumnDataSource,
+                       sliders: list[Slider],
+                       **kwargs) -> Button:
+    """Constructs a button to set all parameters to the given values.
+
+    Args:
+        presets: A dictionary containing the parameter names as keys and the
+            corresponding values to be set when the button is clicked.
+        data_source: The ColumnDataSource holding the "robustness",
+            "adaptivity", and "time" values displayed in the plots. This
+            data_source is updated with the solver's solution for the new
+            parameter values.
+        sliders: The parameter sliders. Their values are refreshed with the
+            presets.
+        kwargs: Named arguments that are directly forwarded to Button.__init__.
+            Typical arguments are button_type, label, and icon. For details, see
+            https://docs.bokeh.org/en/latest/docs/user_guide/interaction/widgets.html#button
+
+    Returns:
+        The constructed button.
+    """
+    button = Button(**kwargs)
+
+    # Trigger solver for parameter values
+    callback = """
+        // Update solver
+        solver.params = presets;
+        data_source.data = solver.solution;
+
+        // Update sliders
+        sliders.forEach(slider => {slider.value = presets[slider.title]});
+    """
+    button.js_on_event("button_click", CustomJS(args={"data_source": data_source, "presets": presets, "sliders": sliders},
+                                                code=callback))
+    return button
+
+
 def main():
     """Create dashboard layout and save HTML page."""
 
@@ -179,13 +213,26 @@ def main():
                                      line_width=5, width=500, height=500, title="Dynamics",
                                      font_size_axes="15pt")
 
-    # Initialize input widgets (sliders, toggles, etc.)
-    sliders = [make_slider(params, data_source) for params in SLIDER_PARAMETERS]
+    # Initialize interactive widgets (sliders, toggles, etc.)
+    sliders = []
+    for name, value in INITIAL_PARAMS.items():
+        params = {"start": 0, "end": 3, "value": value, "step": 0.01, "title": name}
+        if name in {"step_size", "t_max"}:
+            continue  # no sliders for internal solver parameters
+        elif name == "q":
+            params["end"] = 1
+        sliders.append(make_slider(params, data_source))
+
+    preset_buttons = []
+    for name, presets in PRESETS.items():
+        preset_buttons.append(make_preset_button(presets, data_source, sliders,
+                                                 button_type="primary", label=name))
 
     # Arrange widgets
     dashboard = layout(
-        [trajectory_plot, time_plot],
-        column(sliders)
+        row(trajectory_plot, time_plot),
+        column(sliders),
+        row(preset_buttons)
     )
 
     # Initialize solver (extending bokeh.core.templates.FILE)
