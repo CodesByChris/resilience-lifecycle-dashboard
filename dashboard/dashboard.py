@@ -187,7 +187,7 @@ def make_preset_button(presets: dict[str, float],
     # Trigger solver for parameter values
     js_callback = """
         // Update solver
-        solver.params = presets;
+        solver.params = {...presets};
         data_source.data = solver.solution;
 
         // Update sliders
