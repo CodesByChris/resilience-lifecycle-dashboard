@@ -17,8 +17,8 @@ from bokeh.colors import Color
 from bokeh.embed import file_html
 from bokeh.io import curdoc
 from bokeh.io.util import default_filename
-from bokeh.layouts import column, layout, row
-from bokeh.models import Button, ColumnDataSource, CustomJS, HoverTool, Slider
+from bokeh.layouts import column, layout, row, Spacer
+from bokeh.models import Button, ColumnDataSource, CustomJS, Div, HoverTool, Slider
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from math import log
@@ -40,8 +40,8 @@ COLOR_SG = "#A8322D"  # Red
 
 
 def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
-                         line_width: int, width: int, height: int, title: str,
-                         font_size_axes: str):
+                         line_width: int, width: int, height: int, title: str | None,
+                         font_size_axes: str, autohide_toolbar: bool):
     """Constructs a plot to visualize the 2D-trajectory of the ODE.
 
     The plot is an xy-plot whose x-axis is robustness and y-axis is adaptivity,
@@ -61,6 +61,8 @@ def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
         height: The height of the plot in pixels.
         title: The plot title.
         font_size_axes: The font size of the axis labels.
+        autohide_toolbar: Whether the bokeh toolbar shall be displayed only when
+            the user's mouse is on the plot (True) or permanently (False).
 
     Returns:
         The constructed plot.
@@ -75,16 +77,15 @@ def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
     plot.yaxis.axis_label = "Adaptivity"
     plot.xaxis.axis_label_text_font_size = font_size_axes
     plot.yaxis.axis_label_text_font_size = font_size_axes
-    #plot.xaxis.major_label_text_color = COLOR_ROBUSTNESS
-    #plot.yaxis.major_label_text_color = COLOR_ADAPTIVITY
+    plot.toolbar.autohide = autohide_toolbar
 
     return plot
 
 
 def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color | str,
                          color_adaptivity: Color | str, fill_alpha: int,
-                         line_width: int, width: int, height: int, title: str,
-                         font_size_axes: str):
+                         line_width: int, width: int, height: int, title: str | None,
+                         font_size_axes: str, autohide_toolbar: bool):
     """Constructs a plot to visualize robustness and adaptivity over time.
 
     The plotted values are read from (and automatically updated to) data_source.
@@ -101,6 +102,8 @@ def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color 
         height: The height of the plot in pixels.
         title: The plot title.
         font_size_axes: The font size of the axis labels.
+        autohide_toolbar: Whether the bokeh toolbar shall be displayed only when
+            the user's mouse is on the plot (True) or permanently (False).
 
     Returns:
         The constructed plot.
@@ -128,6 +131,7 @@ def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color 
     plot.yaxis.axis_label = "Value"
     plot.xaxis.axis_label_text_font_size = font_size_axes
     plot.yaxis.axis_label_text_font_size = font_size_axes
+    plot.toolbar.autohide = autohide_toolbar
 
     return plot
 
@@ -181,7 +185,7 @@ def make_preset_button(presets: dict[str, float],
     button = Button(**kwargs)
 
     # Trigger solver for parameter values
-    callback = """
+    js_callback = """
         // Update solver
         solver.params = presets;
         data_source.data = solver.solution;
@@ -190,7 +194,7 @@ def make_preset_button(presets: dict[str, float],
         sliders.forEach(slider => {slider.value = presets[slider.title]});
     """
     button.js_on_event("button_click", CustomJS(args={"data_source": data_source, "presets": presets, "sliders": sliders},
-                                                code=callback))
+                                                code=js_callback))
     return button
 
 
@@ -206,14 +210,14 @@ def main():
 
     # Initialize figure widgets
     trajectory_plot = make_trajectory_plot(data_source, "black", line_width=5,
-                                           width=500, height=500, title="Plane",
-                                           font_size_axes="15pt")
+                                           width=500, height=500, title=None,
+                                           font_size_axes="15pt", autohide_toolbar=True)
     time_plot = make_timeseries_plot(data_source, color_robustness=COLOR_ROBUSTNESS,
                                      color_adaptivity=COLOR_ADAPTIVITY, fill_alpha=0.15,
-                                     line_width=5, width=500, height=500, title="Dynamics",
-                                     font_size_axes="15pt")
+                                     line_width=5, width=500, height=500, title=None,
+                                     font_size_axes="15pt", autohide_toolbar=True)
 
-    # Initialize interactive widgets (sliders, toggles, etc.)
+    # Initialize interactive widgets (sliders, toggles, etc.)  # TODO: Turn this into a function for code cleanup?
     sliders = []
     for name, value in INITIAL_PARAMS.items():
         params = {"start": 0, "end": 3, "value": value, "step": 0.01, "title": name}
@@ -228,11 +232,13 @@ def main():
         preset_buttons.append(make_preset_button(presets, data_source, sliders,
                                                  button_type="primary", label=name))
 
+    controls = column(*sliders,
+                      Spacer(height=20),
+                      row(Div(text="Presets: "), *preset_buttons))
+
     # Arrange widgets
     dashboard = layout(
-        row(trajectory_plot, time_plot),
-        column(sliders),
-        row(preset_buttons)
+        row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40), controls)
     )
 
     # Initialize solver (extending bokeh.core.templates.FILE)
