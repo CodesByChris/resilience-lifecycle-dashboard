@@ -208,11 +208,20 @@ def make_description() -> Div:
     """
 
     text = r"""
-        This dashboard visualizes the dynamics equation for robustness and adaptivity as presented in the paper "Struggling with change: The fragile resilience of collectives".
-        The equation is:<br>
-        <br>
+        This dashboard visualizes the differential equations for the two components
+        of the resilience of a social collective, robustness and adaptivity, as
+        presented in the paper
+        <ul>
+            <li><i>"Struggling with change: The fragile resilience of collectives"</i><br>
+                by Frank Schweitzer, Christian Zingg, and Giona Casiraghi.</li>
+        </ul>
+        The differential equations are
+        <p id="equations">
         $$ \frac{dr}{dt} = \alpha_r(1 - q) + \gamma_{r_0}r - \gamma_{r_2}r^3 - \beta_a a $$<br>
-        $$ \frac{da}{dt} = \alpha_a q - \gamma_a + \beta_r $$
+        $$ \frac{da}{dt} = \alpha_a q - \gamma_a + \beta_r r $$
+        </p>
+        $$r$$ denotes robustness and $$a$$ denotes adaptivity.
+        The parameters of the differential equations can be manipulated using the sliders above.
     """
     return Div(text=text)
 
