@@ -226,6 +226,15 @@ def make_description() -> Div:
     return Div(text=text)
 
 
+def make_titlebar() -> Div:
+    """Constructs the dashboard's title bar.
+
+    Returns:
+        The title bar as a Div to be directly used in a Bokeh layout.
+    """
+    return Div(text="Resilience Dashboard", name="title-bar")
+
+
 def main():
     """Create dashboard layout and save HTML page."""
 
@@ -272,13 +281,18 @@ def main():
 
     controls = column(*sliders,
                       Spacer(height=20),
-                      row(Div(text="Presets: "), *preset_buttons))
+                      row(Div(text="Presets: "), *preset_buttons),
+                      name="slider-pane")
 
     # Initialize description text
     description = make_description()
 
+    # Initialize title bar
+    titlebar = make_titlebar()
+
     # Arrange widgets
     dashboard = layout(
+        titlebar,
         row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40), controls),
         Spacer(height=40),
         description
