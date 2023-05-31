@@ -200,6 +200,23 @@ def make_preset_button(presets: dict[str, float],
     return button
 
 
+def make_description() -> Div:
+    """Constructs the dashboard's description text.
+
+    Returns:
+        The description text as a Div to be directly used in a Bokeh layout.
+    """
+
+    text = r"""
+        This dashboard visualizes the dynamics equation for robustness and adaptivity as presented in the paper "Struggling with change: The fragile resilience of collectives".
+        The equation is:<br>
+        <br>
+        $$ \frac{dr}{dt} = \alpha_r(1 - q) + \gamma_{r_0}r - \gamma_{r_2}r^3 - \beta_a a $$<br>
+        $$ \frac{da}{dt} = \alpha_a q - \gamma_a + \beta_r $$
+    """
+    return Div(text=text)
+
+
 def main():
     """Create dashboard layout and save HTML page."""
 
@@ -238,9 +255,14 @@ def main():
                       Spacer(height=20),
                       row(Div(text="Presets: "), *preset_buttons))
 
+    # Initialize description text
+    description = make_description()
+
     # Arrange widgets
     dashboard = layout(
-        row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40), controls)
+        row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40), controls),
+        Spacer(height=40),
+        description
     )
 
     # Initialize solver (extending bokeh.core.templates.FILE)
