@@ -110,19 +110,19 @@ def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color 
     """
     plot = figure(width=width, height=height, title=title)
 
-    # Plot robustness
-    robustness_line = plot.line("time", "robustness", source=data_source, line_width=line_width, color=color_robustness)
-    plot.varea("time", 0, "robustness", source=data_source, fill_color=color_robustness, fill_alpha=fill_alpha)
-
     # Plot adaptivity
-    adaptivity_line = plot.line("time", "adaptivity", source=data_source, line_width=line_width, color=color_adaptivity)
+    adaptivity_line = plot.line("time", "adaptivity", source=data_source, line_width=line_width, color=color_adaptivity, legend_label="Adaptivity")
     plot.varea("time", 0, "adaptivity", source=data_source, fill_color=color_adaptivity, fill_alpha=fill_alpha)
+
+    # Plot robustness
+    robustness_line = plot.line("time", "robustness", source=data_source, line_width=line_width, color=color_robustness, legend_label="Robustness")
+    plot.varea("time", 0, "robustness", source=data_source, fill_color=color_robustness, fill_alpha=fill_alpha)
 
     # Set tooltips
     #     Hint for showing tooltips only on some glyphs: https://stackoverflow.com/a/37558475
-    robustness_hover = HoverTool(tooltips=[("Time", "$x"), ("Rob.", "$y")])
+    robustness_hover = HoverTool(tooltips=[("Rob.", "$y"), ("Time", "$x")])
     robustness_hover.renderers = [robustness_line]
-    adaptivity_hover = HoverTool(tooltips=[("Time", "$x"), ("Ada.", "$y")])
+    adaptivity_hover = HoverTool(tooltips=[("Ada.", "$y"), ("Time", "$x")])
     adaptivity_hover.renderers = [adaptivity_line]
     plot.add_tools(robustness_hover, adaptivity_hover)
 
@@ -132,6 +132,8 @@ def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color 
     plot.xaxis.axis_label_text_font_size = font_size_axes
     plot.yaxis.axis_label_text_font_size = font_size_axes
     plot.toolbar.autohide = autohide_toolbar
+    plot.legend.label_text_font_style = "italic"
+    plot.legend.background_fill_alpha = 0.8
 
     return plot
 
