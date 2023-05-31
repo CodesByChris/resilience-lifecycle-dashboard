@@ -69,7 +69,7 @@ def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
     """
 
     # Plot trajectory
-    plot = figure(width=width, height=height, title=title, tooltips=[("Rob.", "$x"), ("Ada.", "$y")])
+    plot = figure(width=width, height=height, title=title, tooltips=[("Ada.", "$y"), ("Rob.", "$x")])
     plot.line("robustness", "adaptivity", source=data_source, line_width=line_width, color=color)
 
     # Set visuals
@@ -156,7 +156,7 @@ def make_slider(param_dict: dict, data_source: ColumnDataSource) -> Slider:
 
     # Trigger solver for parameter updates
     slider.js_on_change("value", CustomJS(args={"data_source": data_source}, code="""
-        solver.params[cb_obj.title] = cb_obj.value;
+        solver.params[cb_obj.name] = cb_obj.value;
         data_source.data = solver.solution;
     """))
     return slider
@@ -193,7 +193,7 @@ def make_preset_button(presets: dict[str, float],
         data_source.data = solver.solution;
 
         // Update sliders
-        sliders.forEach(slider => {slider.value = presets[slider.title]});
+        sliders.forEach(slider => {slider.value = presets[slider.name]});
     """
     button.js_on_event("button_click", CustomJS(args={"data_source": data_source, "presets": presets, "sliders": sliders},
                                                 code=js_callback))
@@ -239,11 +239,21 @@ def main():
     # Initialize interactive widgets (sliders, toggles, etc.)  # TODO: Turn this into a function for code cleanup?
     sliders = []
     for name, value in INITIAL_PARAMS.items():
-        params = {"start": 0, "end": 3, "value": value, "step": 0.01, "title": name}
+        params = {"start": 0,
+                  "end": 3,
+                  "value": value,
+                  "step": 0.01,
+                  "title": f"$$\{name}$$",
+                  "name": name}
         if name in {"step_size", "t_max"}:
             continue  # no sliders for internal solver parameters
         elif name == "q":
             params["end"] = 1
+            params["title"] = "$$q$$"
+        elif name == "gamma_r0":
+            params["title"] = r"$$\gamma_{r_0}$$"
+        elif name == "gamma_r2":
+            params["title"] = r"$$\gamma_{r_2}$$"
         sliders.append(make_slider(params, data_source))
 
     preset_buttons = []
