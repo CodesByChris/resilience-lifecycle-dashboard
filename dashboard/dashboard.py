@@ -219,7 +219,7 @@ def make_description() -> Div:
         <br>
         $$r$$ denotes robustness and $$a$$ denotes adaptivity.
         The parameters $$q$$, ..., $$\beta_r$$ can be manipulated with the sliders.
-        The equations were postulated in the paper<br>
+        The equations were postulated in the paper:<br>
         <br>
         <p style="text-align: center;">
             <i>"Struggling with change: The fragile resilience of collectives"</i><br>
@@ -228,7 +228,7 @@ def make_description() -> Div:
         <br>
         For simplicity, robustness and adaptivity are not normalized into the interval $$[0, 1]$$.
     """
-    return Div(text=text, styles={"font-size": "150%"})
+    return Div(text=text, styles={"font-size": "150%", "width": "100%"})
 
 
 def make_titlebar() -> Div:
@@ -248,6 +248,15 @@ def make_titlebar() -> Div:
                        "width": "100%"})
 
 
+def make_footer() -> Div:
+    """Constructs the dashboard's footer.
+
+    Returns:
+        The footer as a Div to be directly used in a Bokeh layout.
+    """
+    return Div(styles={"background-color": "black", "height": "6rem", "width": "100%"})
+
+
 def main():
     """Create dashboard layout and save HTML page."""
 
@@ -260,11 +269,11 @@ def main():
 
     # Initialize figure widgets
     trajectory_plot = make_trajectory_plot(data_source, "black", line_width=5,
-                                           width=500, height=500, title=None,
+                                           width=620, height=620, title=None,
                                            font_size_axes="15pt", autohide_toolbar=True)
     time_plot = make_timeseries_plot(data_source, color_robustness=COLOR_ROBUSTNESS,
                                      color_adaptivity=COLOR_ADAPTIVITY, fill_alpha=0.15,
-                                     line_width=5, width=500, height=500, title=None,
+                                     line_width=5, width=620, height=620, title=None,
                                      font_size_axes="15pt", autohide_toolbar=True)
 
     plots = row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40))
@@ -295,21 +304,19 @@ def main():
         preset_buttons.append(make_preset_button(presets, data_source, sliders,
                                                  button_type="primary", label=name))
 
-    controls = column(Div(text="<b>Parameters</b>",
-                          styles={"font-size": "200%"}),
+    controls = column(Div(text="<b>Parameters</b>", styles={"font-size": "200%"}),
                       *sliders,
                       Spacer(height=20),
                       row(Div(text="Presets: ", styles={"font-size": "150%"}), *preset_buttons),
                       styles={"background-color": "#e5c2c0",
-                              "border-radius": "4%",
+                              #"border-radius": "15px",
                               "filter": "drop-shadow(0 0 0.5rem RGB(130, 130, 130))",
                               "padding": "30px"})
 
-    # Initialize description text
+    # Initialize description, title bar, and footer
     description = make_description()
-
-    # Initialize title bar
     titlebar = make_titlebar()
+    footer = make_footer()
 
     # Arrange widgets
     dashboard = layout(
@@ -317,7 +324,9 @@ def main():
         Spacer(height=60),
         row(plots, Spacer(width=40), controls),
         Spacer(height=60),
-        description
+        description,
+        Spacer(height=60),
+        footer
     )
 
     # Initialize solver (extending bokeh.core.templates.FILE)
