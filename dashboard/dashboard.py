@@ -41,7 +41,7 @@ COLOR_SG = "#A8322D"  # Red
 
 def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
                          line_width: int, width: int, height: int, title: str | None,
-                         font_size_axes: str, autohide_toolbar: bool):
+                         font_size_labels: str, font_size_axes: str, autohide_toolbar: bool):
     """Constructs a plot to visualize the 2D-trajectory of the ODE.
 
     The plot is an xy-plot whose x-axis is robustness and y-axis is adaptivity,
@@ -60,7 +60,8 @@ def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
         width: The width of the plot in pixels.
         height: The height of the plot in pixels.
         title: The plot title.
-        font_size_axes: The font size of the axis labels.
+        font_size_labels: The font size of the axis labels.
+        font_size_axes: The font size of the numbers.
         autohide_toolbar: Whether the bokeh toolbar shall be displayed only when
             the user's mouse is on the plot (True) or permanently (False).
 
@@ -75,8 +76,10 @@ def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
     # Set visuals
     plot.xaxis.axis_label = "Robustness"
     plot.yaxis.axis_label = "Adaptivity"
-    plot.xaxis.axis_label_text_font_size = font_size_axes
-    plot.yaxis.axis_label_text_font_size = font_size_axes
+    plot.xaxis.axis_label_text_font_size = font_size_labels
+    plot.yaxis.axis_label_text_font_size = font_size_labels
+    plot.xaxis.major_label_text_font_size = font_size_axes
+    plot.yaxis.major_label_text_font_size = font_size_axes
     plot.toolbar.autohide = autohide_toolbar
 
     return plot
@@ -85,7 +88,7 @@ def make_trajectory_plot(data_source: ColumnDataSource, color: Color | str,
 def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color | str,
                          color_adaptivity: Color | str, fill_alpha: int,
                          line_width: int, width: int, height: int, title: str | None,
-                         font_size_axes: str, autohide_toolbar: bool):
+                         font_size_labels: str, font_size_axes: str, autohide_toolbar: bool):
     """Constructs a plot to visualize robustness and adaptivity over time.
 
     The plotted values are read from (and automatically updated to) data_source.
@@ -101,7 +104,8 @@ def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color 
         width: The width of the plot in pixels.
         height: The height of the plot in pixels.
         title: The plot title.
-        font_size_axes: The font size of the axis labels.
+        font_size_labels: The font size of the axis labels.
+        font_size_axes: The font size of the numbers.
         autohide_toolbar: Whether the bokeh toolbar shall be displayed only when
             the user's mouse is on the plot (True) or permanently (False).
 
@@ -129,8 +133,10 @@ def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color 
     # Set visuals
     plot.xaxis.axis_label = "Time"
     plot.yaxis.axis_label = "Value"
-    plot.xaxis.axis_label_text_font_size = font_size_axes
-    plot.yaxis.axis_label_text_font_size = font_size_axes
+    plot.xaxis.axis_label_text_font_size = font_size_labels
+    plot.yaxis.axis_label_text_font_size = font_size_labels
+    plot.xaxis.major_label_text_font_size = font_size_axes
+    plot.yaxis.major_label_text_font_size = font_size_axes
     plot.toolbar.autohide = autohide_toolbar
     plot.legend.label_text_font_style = "italic"
     plot.legend.label_text_font_size = font_size_axes
@@ -201,8 +207,11 @@ def make_preset_button(presets: dict[str, float],
     return button
 
 
-def make_description() -> Div:
+def make_description(width: str = "1600px") -> Div:
     """Constructs the dashboard's description text.
+
+    Args:
+        width: The width of the text area.
 
     Returns:
         The description text as a Div to be directly used in a Bokeh layout.
@@ -228,7 +237,7 @@ def make_description() -> Div:
         <br>
         For simplicity, robustness and adaptivity are not normalized into the interval $$[0, 1]$$.
     """
-    return Div(text=text, styles={"font-size": "150%", "width": "100%"})
+    return Div(text=text, styles={"font-size": "150%", "width": width})
 
 
 def make_titlebar() -> Div:
@@ -270,11 +279,13 @@ def main():
     # Initialize figure widgets
     trajectory_plot = make_trajectory_plot(data_source, "black", line_width=5,
                                            width=620, height=620, title=None,
-                                           font_size_axes="15pt", autohide_toolbar=True)
+                                           font_size_axes="12pt", font_size_labels="15pt",
+                                           autohide_toolbar=True)
     time_plot = make_timeseries_plot(data_source, color_robustness=COLOR_ROBUSTNESS,
                                      color_adaptivity=COLOR_ADAPTIVITY, fill_alpha=0.15,
                                      line_width=5, width=620, height=620, title=None,
-                                     font_size_axes="15pt", autohide_toolbar=True)
+                                     font_size_axes="12pt", font_size_labels="15pt",
+                                     autohide_toolbar=True)
 
     plots = row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40))
 
@@ -309,7 +320,6 @@ def main():
                       Spacer(height=20),
                       row(Div(text="Presets: ", styles={"font-size": "150%"}), *preset_buttons),
                       styles={"background-color": "#e5c2c0",
-                              #"border-radius": "15px",
                               "filter": "drop-shadow(0 0 0.5rem RGB(130, 130, 130))",
                               "padding": "30px"})
 
@@ -325,8 +335,9 @@ def main():
         row(plots, Spacer(width=40), controls),
         Spacer(height=60),
         description,
-        Spacer(height=60),
-        footer
+        Spacer(height=30),
+        footer,
+        styles={"margin": "auto"}
     )
 
     # Initialize solver (extending bokeh.core.templates.FILE)
