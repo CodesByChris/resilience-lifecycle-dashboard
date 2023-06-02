@@ -218,24 +218,18 @@ def make_description(width: str = "1600px") -> Div:
     """
 
     text = r"""
-        This dashboard visualizes the differential equations for the two components
-        of a social collective's resilience, robustness and adaptivity:<br>
+        This dashboard visualises the differential equations for the two
+        components of a social collective's resilience: robustness $$r(t)$$ and
+        adaptivity $$a(t)$$. The equations are as follows:<br>
         <br>
         <p id="equations", style="text-align: center;">
-        $$ \frac{dr}{dt} = \alpha_r(1 - q) + \gamma_{r_0}r - \gamma_{r_2}r^3 - \beta_a a $$<br>
-        $$ \frac{da}{dt} = \alpha_a q - \gamma_a + \beta_r r $$
+        $$ \frac{dr}{dt} = \alpha_r(1 - q) + \gamma_{r_0}r(t) - \gamma_{r_2}r(t)^3 - \beta_a a(t) $$<br>
+        $$ \frac{da}{dt} = \alpha_a q - \gamma_a a(t) + \beta_r r(t) $$
         </p>
         <br>
-        $$r$$ denotes robustness and $$a$$ denotes adaptivity.
-        The parameters $$q$$, ..., $$\beta_r$$ can be manipulated with the sliders.
-        The equations were postulated in the paper:<br>
-        <br>
-        <p style="text-align: center;">
-            <i>"Struggling with change: The fragile resilience of collectives"</i><br>
-            by Frank Schweitzer, Christian Zingg, and Giona Casiraghi.</li>
-        </p>
-        <br>
-        For simplicity, robustness and adaptivity are not normalized into the interval $$[0, 1]$$.
+        You can manipulate the parameters $$q$$, $$\alpha_r$$, ..., $$\beta_r$$ using the sliders above.
+        The differential equations are derived from the research paper <i>"Struggling with change: The fragile resilience of collectives"</i> by Frank Schweitzer, Christian Zingg, and Giona Casiraghi.
+        Please note that, for simplicity, we have omitted the normalisation of robustness and adaptivity into the interval $$[0, 1]$$ in this visualisation.
     """
     return Div(text=text, styles={"font-size": "150%", "width": width})
 
@@ -246,7 +240,7 @@ def make_titlebar() -> Div:
     Returns:
         The title bar as a Div to be directly used in a Bokeh layout.
     """
-    return Div(text="<h1>Resilience Dashboard</h1>",
+    return Div(text="<h1>Dynamics of Robustness and Adaptivity</h1>",
                styles={"align-items": "center",
                        "background-color": COLOR_SG,
                        "color": "white",
