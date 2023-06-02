@@ -133,6 +133,7 @@ def make_timeseries_plot(data_source: ColumnDataSource, color_robustness: Color 
     plot.yaxis.axis_label_text_font_size = font_size_axes
     plot.toolbar.autohide = autohide_toolbar
     plot.legend.label_text_font_style = "italic"
+    plot.legend.label_text_font_size = font_size_axes
     plot.legend.background_fill_alpha = 0.8
 
     return plot
@@ -209,21 +210,25 @@ def make_description() -> Div:
 
     text = r"""
         This dashboard visualizes the differential equations for the two components
-        of the resilience of a social collective, robustness and adaptivity, as
-        presented in the paper
-        <ul>
-            <li><i>"Struggling with change: The fragile resilience of collectives"</i><br>
-                by Frank Schweitzer, Christian Zingg, and Giona Casiraghi.</li>
-        </ul>
-        The differential equations are
-        <p id="equations">
+        of a social collective's resilience, robustness and adaptivity:<br>
+        <br>
+        <p id="equations", style="text-align: center;">
         $$ \frac{dr}{dt} = \alpha_r(1 - q) + \gamma_{r_0}r - \gamma_{r_2}r^3 - \beta_a a $$<br>
         $$ \frac{da}{dt} = \alpha_a q - \gamma_a + \beta_r r $$
         </p>
+        <br>
         $$r$$ denotes robustness and $$a$$ denotes adaptivity.
-        The parameters of the differential equations can be manipulated using the sliders above.
+        The parameters $$q$$, ..., $$\beta_r$$ can be manipulated with the sliders.
+        The equations were postulated in the paper<br>
+        <br>
+        <p style="text-align: center;">
+            <i>"Struggling with change: The fragile resilience of collectives"</i><br>
+            by Frank Schweitzer, Christian Zingg, and Giona Casiraghi.</li>
+        </p>
+        <br>
+        For simplicity, robustness and adaptivity are not normalized into the interval $$[0, 1]$$.
     """
-    return Div(text=text)
+    return Div(text=text, styles={"font-size": "150%"})
 
 
 def make_titlebar() -> Div:
@@ -232,7 +237,15 @@ def make_titlebar() -> Div:
     Returns:
         The title bar as a Div to be directly used in a Bokeh layout.
     """
-    return Div(text="Resilience Dashboard", name="title-bar")
+    return Div(text="<h1>Resilience Dashboard</h1>",
+               styles={"align-items": "center",
+                       "background-color": COLOR_SG,
+                       "color": "white",
+                       "display": "flex",
+                       "font-size": "200%",
+                       "height": "6rem",
+                       "padding-left": "2rem",
+                       "width": "100%"})
 
 
 def main():
@@ -254,6 +267,8 @@ def main():
                                      line_width=5, width=500, height=500, title=None,
                                      font_size_axes="15pt", autohide_toolbar=True)
 
+    plots = row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40))
+
     # Initialize interactive widgets (sliders, toggles, etc.)  # TODO: Turn this into a function for code cleanup?
     sliders = []
     for name, value in INITIAL_PARAMS.items():
@@ -262,7 +277,8 @@ def main():
                   "value": value,
                   "step": 0.01,
                   "title": f"$$\{name}$$",
-                  "name": name}
+                  "name": name,
+                  "styles": {"font-size": "125%"}}
         if name in {"step_size", "t_max"}:
             continue  # no sliders for internal solver parameters
         elif name == "q":
@@ -279,10 +295,15 @@ def main():
         preset_buttons.append(make_preset_button(presets, data_source, sliders,
                                                  button_type="primary", label=name))
 
-    controls = column(*sliders,
+    controls = column(Div(text="<b>Parameters</b>",
+                          styles={"font-size": "200%"}),
+                      *sliders,
                       Spacer(height=20),
-                      row(Div(text="Presets: "), *preset_buttons),
-                      name="slider-pane")
+                      row(Div(text="Presets: ", styles={"font-size": "150%"}), *preset_buttons),
+                      styles={"background-color": "#e5c2c0",
+                              "border-radius": "4%",
+                              "filter": "drop-shadow(0 0 0.5rem RGB(130, 130, 130))",
+                              "padding": "30px"})
 
     # Initialize description text
     description = make_description()
@@ -293,26 +314,33 @@ def main():
     # Arrange widgets
     dashboard = layout(
         titlebar,
-        row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40), controls),
-        Spacer(height=40),
+        Spacer(height=60),
+        row(plots, Spacer(width=40), controls),
+        Spacer(height=60),
         description
     )
 
     # Initialize solver (extending bokeh.core.templates.FILE)
-    load_solver_template = """
+    template = """
         {% block postamble %}
         <script src="dashboard.js"></script>
         <script>
             // Initialize solver object shared between all widgets
             var solver = new Solver({{ params }}, {{ initial_values }});
         </script>
+        <style>
+            body {
+                margin: 0px;
+                padding: 0px;
+            }
+        </style>
         {% endblock %}
     """
 
     # Save HTML
     html = file_html(dashboard,
                      resources=CDN,
-                     template=load_solver_template,
+                     template=template,
                      template_variables={"params": INITIAL_PARAMS,
                                          "initial_values": INITIAL_VALUES,})
     with open(default_filename("html"), "w") as file:
