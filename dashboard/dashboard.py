@@ -28,10 +28,12 @@ T_MAX = 100  # (0, T_MAX) is time interval in which to solve and visualize the d
 INITIAL_VALUES = {"robustness": log(0.5), "adaptivity": log(0.5), "time": 0}
 PRESETS = {"Scenario I": {"t_max": T_MAX, "step_size": 0.1,
                           "q": 0.29, "alpha_r": 0.12, "gamma_r0": 1.27, "gamma_r2": 2.07,
-                          "beta_a": 0.68, "alpha_a": 0.07, "gamma_a": 0.24, "beta_r": 0.34},
+                          "beta_a": 0.68, "alpha_a": 0.07, "gamma_a": 0.24, "beta_r": 0.34,
+                          "k_r": 1.52, "k_a": 2.09, "r_0": 0.17, "a_0": 0.51},
            "Scenario II": {"t_max": T_MAX, "step_size": 0.1,
-                           "q": 0.29, "alpha_r": 0.02, "gamma_r0": 0.7, "gamma_r2": 1.41,
-                           "beta_a": 0.33, "alpha_a": 0.01, "gamma_a": 0.01, "beta_r": 0.34}}
+                           "q": 0.29, "alpha_r": 0.26, "gamma_r0": 0.7, "gamma_r2": 0.63,
+                           "beta_a": 0.33, "alpha_a": 0.01, "gamma_a": 0.01, "beta_r": 0.34,
+                           "k_r": 3.92, "k_a": 1, "r_0": 0.73, "a_0": 1.84}}
 INITIAL_PARAMS = PRESETS["Scenario I"].copy()
 
 COLOR_ADAPTIVITY = "#FBB13C"  # Yellow
@@ -287,7 +289,7 @@ def main():
     sliders = []
     for name, value in INITIAL_PARAMS.items():
         params = {"start": 0,
-                  "end": 3,
+                  "end": 5,
                   "value": value,
                   "step": 0.01,
                   "title": f"$$\{name}$$",
@@ -298,6 +300,8 @@ def main():
         elif name == "q":
             params["end"] = 1
             params["title"] = "$$q$$"
+        elif name in {"k_r", "k_a", "r_0", "a_0"}:
+            params["title"] = f"$${name}$$"
         elif name == "gamma_r0":
             params["title"] = r"$$\gamma_{r_0}$$"
         elif name == "gamma_r2":

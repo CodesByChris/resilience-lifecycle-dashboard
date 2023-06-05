@@ -1,5 +1,18 @@
 /** Contains the equation solver class for eqn. (4). */
 
+function logit(x, x_0, k, L) {
+    /** Computes the logit of x.
+     *
+     * @param x: Input value at which to evaluate logit.
+     * @param x_0: Midpoint of sigmoid function.
+     * @param k: Steepness of sigmoid function.
+     * @param L: Maximum value of sigmoid function.
+     * @returns The logit of x.
+     */
+    return L / (1 + Math.exp(-k*(x - x_0)));
+}
+
+
 class Solver {
     /** Class for solving the robustness-adaptivity coupled ODE and computing its vector field. */
 
@@ -31,20 +44,21 @@ class Solver {
         // Solve over time
         let solution = {robustness: [], adaptivity: [], time: []};
         while (curr_time <= this.params.t_max) {
-            // Store current values (exponentially transformed for non-negativity)
-            solution.robustness.push(Math.exp(curr_rob))
-            solution.adaptivity.push(Math.exp(curr_ada))
-            solution.time.push(curr_time)
+            // Store current values (logit transformed)
+            const {k_r, k_a, r_0, a_0} = this.params;
+            solution.robustness.push(logit(curr_rob, r_0, k_r, 1));
+            solution.adaptivity.push(logit(curr_ada, a_0, k_a, 1));
+            solution.time.push(curr_time);
 
             // Compute next values (simultaneous update!)
-            const delta_rob = this.computeDrDt(curr_rob, curr_ada) * this.params.step_size
-            const delta_ada = this.computeDaDt(curr_rob, curr_ada) * this.params.step_size
-            curr_rob += delta_rob
-            curr_ada += delta_ada
-            curr_time += this.params.step_size
+            const delta_rob = this.computeDrDt(curr_rob, curr_ada) * this.params.step_size;
+            const delta_ada = this.computeDaDt(curr_rob, curr_ada) * this.params.step_size;
+            curr_rob += delta_rob;
+            curr_ada += delta_ada;
+            curr_time += this.params.step_size;
         }
 
-        return solution
+        return solution;
     }
 
     // get vector_field() {
@@ -64,7 +78,7 @@ class Solver {
          * @returns The computed value for dr/dt.
          */
         const {alpha_r, q, gamma_r0, gamma_r2, beta_a} = this.params;
-        return alpha_r*(1 - q) + gamma_r0*rob - gamma_r2*Math.pow(rob, 3) - beta_a * ada
+        return alpha_r*(1 - q) + gamma_r0*rob - gamma_r2*Math.pow(rob, 3) - beta_a * ada;
     }
 
 
@@ -76,6 +90,6 @@ class Solver {
          * @returns The computed value for da/dt.
          */
         const {alpha_a, q, gamma_a, beta_r} = this.params;
-        return alpha_a*q - gamma_a*ada + beta_r*rob
+        return alpha_a*q - gamma_a*ada + beta_r*rob;
     }
 }
