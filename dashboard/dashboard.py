@@ -221,17 +221,24 @@ def make_description(width: str = "1600px") -> Div:
 
     text = r"""
         This dashboard visualises the differential equations for the two
-        components of a social collective's resilience: robustness $$r(t)$$ and
-        adaptivity $$a(t)$$. The equations are as follows:<br>
+        components of a social collective's resilience: <em>robustness</em> $$R(t)$$ and
+        <em>adaptivity</em> $$A(t)$$. These components and their equations are
+        proposed in the research paper <i>"Struggling with change: The fragile
+        resilience of collectives"</i> by Frank Schweitzer, Christian Zingg, and
+        Giona Casiraghi.
+        The equations are:<br>
         <br>
-        <p id="equations", style="text-align: center;">
+        <p style="text-align: center;">
+        $$R(t) = \frac{1}{1+e^{-k_r(r(t)-r_0)}}$$<br>
+        $$A(t) = \frac{1}{1+e^{-k_a(a(t)-a_0)}}$$
+        </p>
+        <br>
+        where $$r(t)$$ and $$a(t)$$ are the solutions of the following differential equations:<br>
+        <br>
+        <p style="text-align: center;">
         $$ \frac{dr}{dt} = \alpha_r(1 - q) + \gamma_{r_0}r(t) - \gamma_{r_2}r(t)^3 - \beta_a a(t) $$<br>
         $$ \frac{da}{dt} = \alpha_a q - \gamma_a a(t) + \beta_r r(t) $$
         </p>
-        <br>
-        You can manipulate the parameters $$q$$, $$\alpha_r$$, ..., $$\beta_r$$ using the sliders above.
-        The differential equations are derived from the research paper <i>"Struggling with change: The fragile resilience of collectives"</i> by Frank Schweitzer, Christian Zingg, and Giona Casiraghi.
-        Please note that, for simplicity, we have omitted the normalisation of robustness and adaptivity into the interval $$[0, 1]$$ in this visualisation.
     """
     return Div(text=text, styles={"font-size": "150%", "width": width})
 
