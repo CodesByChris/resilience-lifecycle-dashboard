@@ -209,6 +209,28 @@ def make_preset_button(presets: dict[str, float],
     return button
 
 
+def make_copy_button(data_source, **kwargs):
+    """Constructs a button to copy the data from a ColumnDataSource into the clipboard.
+
+    Args:
+        data_source: The ColumnDataSource holding the "robustness",
+            "adaptivity", and "time" values displayed in the plots.
+        kwargs: Named arguments that are directly forwarded to Button.__init__.
+            Typical arguments are button_type, label, and icon. For details, see
+            https://docs.bokeh.org/en/latest/docs/user_guide/interaction/widgets.html#button
+
+    Returns:
+        The constructed button.
+    """
+    button = Button(**kwargs)
+    js_callback = """
+        const data = JSON.stringify(data_source.data);
+        navigator.clipboard.writeText(data);
+    """
+    button.js_on_event("button_click", CustomJS(args={"data_source": data_source}, code=js_callback))
+    return button
+
+
 def make_description(width: str = "1600px") -> Div:
     """Constructs the dashboard's description text.
 
@@ -320,7 +342,9 @@ def main():
         preset_buttons.append(make_preset_button(presets, data_source, sliders,
                                                  button_type="primary", label=name))
 
-    controls = column(Div(text="<b>Parameters</b>", styles={"font-size": "200%"}),
+    copy_button = make_copy_button(data_source, button_type="success", label="Copy")
+
+    controls = column(row(Div(text="<b>Modify parameters:</b>", styles={"font-size": "200%"}), copy_button),
                       *sliders,
                       Spacer(height=20),
                       row(Div(text="Presets: ", styles={"font-size": "150%"}), *preset_buttons),
