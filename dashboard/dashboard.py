@@ -231,7 +231,7 @@ def make_copy_button(data_source, **kwargs):
     return button
 
 
-def make_description(width: str = "1600px") -> Div:
+def make_description(width: str = "100%") -> Div:
     """Constructs the dashboard's description text.
 
     Args:
@@ -265,32 +265,6 @@ def make_description(width: str = "1600px") -> Div:
     return Div(text=text, styles={"font-size": "150%", "width": width})
 
 
-def make_titlebar() -> Div:
-    """Constructs the dashboard's title bar.
-
-    Returns:
-        The title bar as a Div to be directly used in a Bokeh layout.
-    """
-    return Div(text="<h1>Dynamics of Robustness and Adaptivity</h1>",
-               styles={"align-items": "center",
-                       "background-color": COLOR_SG,
-                       "color": "white",
-                       "display": "flex",
-                       "font-size": "200%",
-                       "height": "6rem",
-                       "padding-left": "2rem",
-                       "width": "100%"})
-
-
-def make_footer() -> Div:
-    """Constructs the dashboard's footer.
-
-    Returns:
-        The footer as a Div to be directly used in a Bokeh layout.
-    """
-    return Div(styles={"background-color": "black", "height": "6rem", "width": "100%"})
-
-
 def main():
     """Create dashboard layout and save HTML page."""
 
@@ -301,22 +275,22 @@ def main():
         data_source.data = solver.solution;
     """))
 
-    # Initialize figure widgets
+    # Initialize plot widgets
     trajectory_plot = make_trajectory_plot(data_source, "black", line_width=5,
-                                           width=620, height=620, title=None,
+                                           width=500, height=500, title=None,
                                            font_size_axes="12pt", font_size_labels="15pt",
                                            autohide_toolbar=True)
     time_plot = make_timeseries_plot(data_source, color_robustness=COLOR_ROBUSTNESS,
                                      color_adaptivity=COLOR_ADAPTIVITY, fill_alpha=0.15,
-                                     line_width=5, width=620, height=620, title=None,
+                                     line_width=5, width=500, height=500, title=None,
                                      font_size_axes="12pt", font_size_labels="15pt",
                                      autohide_toolbar=True)
 
     plots = row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40))
 
-    # Initialize interactive widgets (sliders, toggles, etc.)  # TODO: Turn this into a function for code cleanup?
+    # Initialize slider widgets  # TODO: Turn this into a function for code cleanup?
     sliders = []
-    for name, value in INITIAL_PARAMS.items():
+    for name, value in INITIAL_PARAMS.items():  # TODO: Use a default dict
         params = {"start": 0,
                   "end": 5,
                   "value": value,
@@ -336,36 +310,36 @@ def main():
         elif name == "gamma_r2":
             params["title"] = r"$$\gamma_{r_2}$$"
         sliders.append(make_slider(params, data_source))
+    slider_block = column([row(sliders[i:i+3]) for i in range(0, len(sliders), 3)]) # 3 sliders per row
 
+    # Initialize preset buttons
     preset_buttons = []
     for name, presets in PRESETS.items():
         preset_buttons.append(make_preset_button(presets, data_source, sliders,
                                                  button_type="primary", label=name))
 
+    # Initialize copy button
     copy_button = make_copy_button(data_source, button_type="success", label="Copy")
 
+    # Assemble control board
     controls = column(row(Div(text="<b>Modify parameters:</b>", styles={"font-size": "200%"}), copy_button),
-                      *sliders,
+                      slider_block,
                       Spacer(height=20),
                       row(Div(text="Presets: ", styles={"font-size": "150%"}), *preset_buttons),
                       styles={"background-color": "#e5c2c0",
                               "filter": "drop-shadow(0 0 0.5rem RGB(130, 130, 130))",
                               "padding": "30px"})
 
-    # Initialize description, title bar, and footer
+    # Initialize description
     description = make_description()
-    titlebar = make_titlebar()
-    footer = make_footer()
 
     # Arrange widgets
     dashboard = layout(
-        titlebar,
+        plots,
         Spacer(height=60),
-        row(plots, Spacer(width=40), controls),
+        controls,
         Spacer(height=60),
         description,
-        Spacer(height=30),
-        footer,
         styles={"margin": "auto"}
     )
 
