@@ -286,11 +286,11 @@ def main():
                                      font_size_axes="12pt", font_size_labels="15pt",
                                      autohide_toolbar=True)
 
-    plots = row(trajectory_plot, Spacer(width=40), time_plot, Spacer(width=40))
+    plots = row(trajectory_plot, Spacer(width=40), time_plot)
 
-    # Initialize slider widgets  # TODO: Turn this into a function for code cleanup?
+    # Initialize slider widgets
     sliders = []
-    for name, value in INITIAL_PARAMS.items():  # TODO: Use a default dict
+    for name, value in INITIAL_PARAMS.items():
         params = {"start": 0,
                   "end": 5,
                   "value": value,
@@ -319,10 +319,10 @@ def main():
                                                  button_type="primary", label=name))
 
     # Initialize copy button
-    copy_button = make_copy_button(data_source, button_type="success", label="Copy")
+    #copy_button = make_copy_button(data_source, button_type="success", label="Copy")
 
     # Assemble control board
-    controls = column(row(Div(text="<b>Modify parameters:</b>", styles={"font-size": "200%"}), copy_button),
+    controls = column(row(Div(text="<b>Modify parameters:</b>", styles={"font-size": "200%"})),
                       slider_block,
                       Spacer(height=20),
                       row(Div(text="Presets: ", styles={"font-size": "150%"}), *preset_buttons),
@@ -331,7 +331,7 @@ def main():
                               "padding": "30px"})
 
     # Initialize description
-    description = make_description()
+    description = make_description(width="1040px")
 
     # Arrange widgets
     dashboard = layout(
