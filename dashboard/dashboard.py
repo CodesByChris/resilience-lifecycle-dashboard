@@ -263,9 +263,7 @@ def make_description(width: str = "100%") -> Div:
         </p>
         <br>
         The buttons <em>Scenario (a)</em> and <em>Scenario (b)</em> set the parameters to the
-        values from Figure&nbsp;4&nbsp;(a) and (b) in the paper.<br>
-        <br>
-        View code on <a href="https://github.com/sg-dev/resilience-lifecycle-dashboard">GitHub</a>!
+        values from Figure&nbsp;4&nbsp;(a) and (b) in the paper.
     """
     return Div(text=text, styles={"font-size": "150%", "width": width})
 
