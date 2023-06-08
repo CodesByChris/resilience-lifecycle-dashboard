@@ -26,15 +26,15 @@ from math import log
 # Initial values and constants
 T_MAX = 100  # (0, T_MAX) is time interval in which to solve and visualize the differential equations
 INITIAL_VALUES = {"robustness": log(0.5), "adaptivity": log(0.5), "time": 0}
-PRESETS = {"Scenario I": {"t_max": T_MAX, "step_size": 0.1,
+PRESETS = {"Scenario (a)": {"t_max": T_MAX, "step_size": 0.1,
                           "q": 0.29, "alpha_r": 0.12, "gamma_r0": 1.27, "gamma_r2": 2.07,
                           "beta_a": 0.68, "alpha_a": 0.07, "gamma_a": 0.24, "beta_r": 0.34,
                           "k_r": 3.31, "k_a": 3.13, "r_0": 0, "a_0": 0.39},
-           "Scenario II": {"t_max": T_MAX, "step_size": 0.1,
+           "Scenario (b)": {"t_max": T_MAX, "step_size": 0.1,
                            "q": 0.29, "alpha_r": 0.26, "gamma_r0": 0.7, "gamma_r2": 0.63,
                            "beta_a": 0.33, "alpha_a": 0.01, "gamma_a": 0.01, "beta_r": 0.51,
                            "k_r": 1.98, "k_a": 1.84, "r_0": 0.73, "a_0": 1.84}}
-INITIAL_PARAMS = PRESETS["Scenario I"].copy()
+INITIAL_PARAMS = PRESETS["Scenario (a)"].copy()
 
 COLOR_ADAPTIVITY = "#FBB13C"  # Yellow
 COLOR_ROBUSTNESS = "#2E5EAA"  # Blue
@@ -261,6 +261,11 @@ def make_description(width: str = "100%") -> Div:
         $$ \frac{dr}{dt} = \alpha_r(1 - q) + \gamma_{r_0}r(t) - \gamma_{r_2}r(t)^3 - \beta_a a(t) $$<br>
         $$ \frac{da}{dt} = \alpha_a q - \gamma_a a(t) + \beta_r r(t) $$
         </p>
+        <br>
+        The buttons <em>Scenario (a)</em> and <em>Scenario (b)</em> set the parameters to the
+        values from Figure&nbsp;4&nbsp;(a) and (b) in the paper.<br>
+        <br>
+        View code on <a href="https://github.com/sg-dev/resilience-lifecycle-dashboard">GitHub</a>!
     """
     return Div(text=text, styles={"font-size": "150%", "width": width})
 
