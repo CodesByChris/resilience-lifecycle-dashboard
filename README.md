@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/651442334.svg)](https://zenodo.org/badge/latestdoi/651442334)
+
 # Resilience Lifecycle Dashboard
 
 This repository contains an interactive dashboard that visualizes the cycles emerging from the resilience model presented in the paper "Struggling with change: The fragile resilience of collectives".
