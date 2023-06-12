@@ -27,13 +27,13 @@ from math import log
 T_MAX = 100  # (0, T_MAX) is time interval in which to solve and visualize the differential equations
 INITIAL_VALUES = {"robustness": log(0.5), "adaptivity": log(0.5), "time": 0}
 PRESETS = {"Scenario (a)": {"t_max": T_MAX, "step_size": 0.1,
-                          "q": 0.29, "alpha_r": 0.12, "gamma_r0": 1.27, "gamma_r2": 2.07,
-                          "beta_a": 0.68, "alpha_a": 0.07, "gamma_a": 0.24, "beta_r": 0.34,
-                          "k_r": 3.31, "k_a": 3.13, "r_0": 0, "a_0": 0.39},
+                            "q": 0.29, "alpha_r": 0.12, "gamma_r0": 1.27, "gamma_r2": 2.07,
+                            "beta_a": 0.68, "alpha_a": 0.07, "gamma_a": 0.24, "beta_r": 0.34,
+                            "k_r": 3.31, "k_a": 3.13, "r_0": 0, "a_0": 0.39},
            "Scenario (b)": {"t_max": T_MAX, "step_size": 0.1,
-                           "q": 0.29, "alpha_r": 0.26, "gamma_r0": 0.7, "gamma_r2": 0.63,
-                           "beta_a": 0.33, "alpha_a": 0.01, "gamma_a": 0.01, "beta_r": 0.51,
-                           "k_r": 1.98, "k_a": 1.84, "r_0": 0.73, "a_0": 1.84}}
+                            "q": 0.29, "alpha_r": 0.26, "gamma_r0": 0.7, "gamma_r2": 0.63,
+                            "beta_a": 0.33, "alpha_a": 0.01, "gamma_a": 0.01, "beta_r": 0.51,
+                            "k_r": 1.98, "k_a": 1.84, "r_0": 0.73, "a_0": 1.84}}
 INITIAL_PARAMS = PRESETS["Scenario (a)"].copy()
 
 COLOR_ADAPTIVITY = "#FBB13C"  # Yellow
@@ -243,16 +243,16 @@ def make_description(width: str = "100%") -> Div:
 
     text = r"""
         This dashboard visualises the differential equations for the two
-        components of a social collective's resilience: <em>robustness</em> $$R(t)$$ and
-        <em>adaptivity</em> $$A(t)$$. These components and their equations are
-        proposed in the research paper <i>"Struggling with change: The fragile
-        resilience of collectives"</i> by Frank Schweitzer, Christian Zingg, and
-        Giona Casiraghi.
-        The equations are:<br>
+        components of a social collective's resilience: <em>robustness</em>
+        $$R(t)$$ and <em>adaptivity</em> $$\hat{A}(t)$$ (proxied by the
+        propensity to change). These components and their equations are proposed
+        in the research paper <i>"Struggling with change: The fragile resilience
+        of collectives"</i> by Frank Schweitzer, Christian Zingg, and Giona
+        Casiraghi. The equations are:<br>
         <br>
         <p style="text-align: center;">
         $$R(t) = \frac{1}{1+e^{-k_r(r(t)-r_0)}}$$<br>
-        $$A(t) = \frac{1}{1+e^{-k_a(a(t)-a_0)}}$$
+        $$\hat{A}(t) = \frac{1}{1+e^{-k_a(a(t)-a_0)}}$$
         </p>
         <br>
         where $$r(t)$$ and $$a(t)$$ are the solutions of the following differential equations:<br>
