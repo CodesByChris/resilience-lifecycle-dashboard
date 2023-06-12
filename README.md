@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/651442334.svg)](https://zenodo.org/badge/latestdoi/651442334)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8020033.svg)](https://doi.org/10.5281/zenodo.8020033)
 
 # Resilience Lifecycle Dashboard
 
